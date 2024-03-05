@@ -1,0 +1,93 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+
+model User {
+  id              Int               @id @default(autoincrement())
+  username        String            @db.VarChar(72)
+  password        String            @db.Char(75)
+  email           String?
+  shippingAddress ShippingAddress[]
+  orders          Order[]
+  products        Product[]
+  profile         Profile[]
+
+  @@map("users")
+}
+
+model Profile {
+  id        Int     @id @default(autoincrement())
+  profile String  @db.VarChar(50)
+  lastName  String  @db.VarChar(50)
+  email     String?
+  phone     String  @db.VarChar(50)
+  address   String  @db.VarChar(50)
+  country   String  @db.VarChar(50)
+  user      User    @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  userId    Int
+}
+
+model Order {
+  id            Int             @id @default(autoincrement())
+  discount      Int
+  deliveryFee   Int
+  total         Int
+  createdAt     DateTime        @default(now()) @db.Timestamp(0)
+  user          User            @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  userId        Int             @map("user_id")
+  order_Product Order_Product[]
+}
+
+
+model Order_Product {
+  id        Int     @id @default(autoincrement())
+  quantity  String  @db.VarChar(50)
+  orders    Order   @relation(fields: [orderId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  orderId   Int     @map("order_id")
+  products  Product @relation(fields: [productId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  productId Int     @map("product_id")
+}
+
+model Product {
+  id               Int               @id @default(autoincrement())
+  productName      String            @db.VarChar(50)
+  stock            String            @db.VarChar(50)
+  title            String            @db.VarChar(50)
+  unit             String            @db.VarChar(50)
+  price            String            @db.VarChar(50)
+  detail           String            @db.VarChar(60)
+  user             User              @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  userId           Int               @map("user_id")
+  order_Product    Order_Product[]
+}
+
+model ShippingAddress {
+  id             Int     @id @default(autoincrement())
+  firstName      String  @db.VarChar(50)
+  lastName       String  @db.VarChar(50)
+  identityNumber String? @db.VarChar(50)
+  email          String  @db.VarChar(60)
+  phone          String  @db.VarChar(20)
+  address        String  @db.VarChar(80)
+  province       String  @db.VarChar(30) //จังหวัด
+  subDistrict    String  @db.VarChar(30) // ตำบล
+  district       String? @db.VarChar(30) //เขต
+  postalCode     String  @db.VarChar(10) //รหัสไปรษณีย์
+  isMainAddress  String  @db.VarChar(80) //ที่อยู่เป็นหลัก 
+  user           User    @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  userId         Int     @map("user_id")
+
+  @@map("shippingAddress")
+}
